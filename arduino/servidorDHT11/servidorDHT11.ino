@@ -118,4 +118,3 @@ String humedad(){
    valor2.concat(humedad);
    return valor2;
 }
-
