@@ -1,51 +1,60 @@
+#include <Arduino.h>
+#ifdef ESP32
 #include <WiFi.h>
-#include "ESPAsyncWebServer.h"
+#include <AsyncTCP.h>
+#elif defined(ESP8266)
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+#endif
+#include <ESPAsyncWebSrv.h>
 
-const char* ssid="Totalplay-DD9F";
-const char*password="DD9FBFA2HZfk4G2k";
+const char* ssid = "paila";
+const char* password = "278brando";
+AsyncWebServer server (80);
 
-AsyncWebServer server(80);
+void setup() {
+  pinMode(2, OUTPUT);
+  Serial.begin(115200);
+  conectarse();
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    int numParametros = request -> params();
+    Serial.print(numParametros);
+    if(numParametros==0){
+      request->send(200,"text/html","<H1> hola mundo </H1>");
+    }else{
+      AsyncWebParameter * p= request->getParam(0);
+      String html = "<H1> hola " + p->value() + "desde ESP32 </H1>";
+      request->send(200,"text/html",html);
+    }
+  });
+  server.on("/adios", HTTP_GET, [](AsyncWebServerRequest *request){
+    request -> send (200, "text/html", "<H1> adios </H1>");
+  });
 
-void setup()
-{
-Serial.begin(115200);
-conectarse();
-server.on("/", HTTP_GET, [](AsyncWebServerRequest * request){
-  int numParametros = request->params();
-  Serial.print(numParametros);
-  if(numParamentros == 0)
-  request -> send(200, "text/html", "<h1>hola mundo</h1>");
-  else{
-    AsyncWebServer xp= request -> getParam(0);
-    String html= "<h1>Hola "+ p->value()+"desde ESP32 </h1>";
-    request-> send(200,"text/html",hmtl);
-  }
-});
-server.on("/adios",HTTP.GET[](AsyncWebServerRequest * r){
-  r->send(200,"text/html", "<h1>adios</h1>");
-});
+   server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request){
+    digitalWrite(2, HIGH); 
+    request -> send (200, "text/html", "<H1> adios </H1>");
+  });
 
-delay(10);
+   server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request){
+    digitalWrite(2, LOW); 
+    request -> send (200, "text/html", "<H1> adios </H1>");
+  });
+  
+  server.begin();
+} // FIN SETUP
 
-//se inicia la conexion
-Serial.println();
-Serial.println();
-Serial.print("Connecting to");
-Serial.println(ssid);
+void loop() {}
 
-WiFi.begin(ssid,password);
-//se verifica
-while(WiFi.status() != WL_CONNECTED){
-  delay(500);
-  Serial.print(".");
-}
-//lograda la conexion se muestra la informacion
-Serial.print("");
-Serial.print("WiFi connected");
-Serial.print("IP address:");
-Serial.print(WiFi.localIP());
-}
+void conectarse(){
+    Serial.print("conectando");
+    Serial.println(ssid);
+    WiFi.begin(ssid,password);
 
-void loop(){
+    while(WiFi.status() != WL_CONNECTED){
+      delay(500);
+      Serial.print(".");
+    }
 
+    Serial.print(WiFi.localIP());
 }
